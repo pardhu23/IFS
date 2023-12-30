@@ -21,7 +21,11 @@ jobs:
         run: |
           COMMIT_ID=$(git rev-parse HEAD)
           java -jar IFS/.github/IfsCodeReview.jar $COMMIT_ID plsql_files.txt
-
+          
+      - name: Print comments.json
+        run: cat comments.json
+        working-directory: ${{ github.workspace }}
+        
       - name: Upload comments.json as PR artifact
         if: always() # Ensure this step runs even if previous steps fail
         uses: actions/upload-artifact@v2
