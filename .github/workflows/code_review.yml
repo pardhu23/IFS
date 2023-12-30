@@ -32,7 +32,7 @@ jobs:
       - name: Print comments.json
         run: cat comments.json
         working-directory: ${{ github.workspace }}
-
+        
       - name: Upload comments.json as PR artifact
         if: always() # Ensure this step runs even if previous steps fail
         uses: actions/upload-artifact@v2
