@@ -1,0 +1,30 @@
+name: PLSQL Code Review
+
+on:
+  pull_request:
+    branches:
+      - main # Update with your branch name
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get .plsql files
+        run: |
+          find . -name "*.plsql" > plsql_files.txt
+
+      - name: Run IfsCodeReview.jar
+        run: |
+          COMMIT_ID=$(git rev-parse HEAD)
+          java -jar IFS/.github/IfsCodeReview.jar $COMMIT_ID plsql_files.txt
+
+      - name: Upload comments.json as PR artifact
+        if: always() # Ensure this step runs even if previous steps fail
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-review-comments
+          path: comments.json
