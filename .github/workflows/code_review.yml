@@ -9,6 +9,8 @@ jobs:
   code-review:
     permissions: write-all
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -22,28 +24,15 @@ jobs:
 
       - name: Run IfsCodeReview.jar
         run: |
-          COMMIT_ID=$(git rev-parse HEAD)
-          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql
+          COMMIT_SHA=${{ github.sha }}
+          OWNER_ID=${{ github.repository_owner }}
+          REPO_ID=$(echo ${{ github.repository }} | awk -F/ '{print $NF}')
+          PR_NO=${{ github.event.number }}
+          env GH_TOKEN=${{ secrets.GH_TOKEN }} OWNER_ID=$OWNER_ID REPO_ID=$REPO_ID PR_NO=$PR_NO java -jar .github/IfsCodeReview.jar $COMMIT_SHA workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
         working-directory: ${{ github.workspace }}
-
-      - name: Print comments.json
-        run: cat comments.json
-        working-directory: ${{ github.workspace }}
-
-      - name: Read comments from JSON file
-        run: |
-          COMMENTS=$(cat comments.json)
-          echo "$COMMENTS" | jq -c '.[]' > comments_temp.json
-        shell: bash
-
-      - name: Post comments to PR
-        run: |
-          for COMMENT in $(jq -c '.[]' comments_temp.json); do
-            curl -X POST \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              -d "$COMMENT" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments"
-          done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          OWNER_ID: ${{ github.repository_owner }}
+          REPO_ID: ${{ github.repository }}
+          PR_NO: ${{ github.event.number }}
+          COMMIT_SHA: ${{ github.sha }}
