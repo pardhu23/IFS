@@ -33,9 +33,14 @@ jobs:
         run: cat comments.json
         working-directory: ${{ github.workspace }}
         
-      - name: Upload comments.json as PR artifact
-        if: always() # Ensure this step runs even if previous steps fail
-        uses: actions/upload-artifact@v2
-        with:
-          name: code-review-comments
-          path: comments.json
+      - name: Add Comments to PR
+        run: |
+          # Read the JSON file containing comments
+          COMMENTS=$(cat comments.json)
+          
+          # Post comments to the Pull Request using GitHub API
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$COMMENTS" \
+            https://api.github.com/repos/:owner/:repo/issues/:issue_number/comments
