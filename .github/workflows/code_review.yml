@@ -1,4 +1,4 @@
-name: Process JSON Items
+name: Add Comments to PR
 
 on:
   pull_request:
@@ -6,22 +6,59 @@ on:
       - main
 
 jobs:
-  process-json:
+  code-review:
+    permissions: write-all
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Process JSON Items
-        run: |
-          json='[
-            {"body": "SELECT * is not allowed, specify the required columns.","path": "workspace/Test.plsql","line": 11,"commit_id": "90de3a02bdf57cb64bdb7f934f8949e42ba59851"},
-            {"body": "SELECT * is not allowed, specify the required columns.","path": "workspace/Test.plsql","line": 14,"commit_id": "90de3a02bdf57cb64bdb7f934f8949e42ba59851"}
-          ]'
+      - name: Set up JDK 14
+        uses: actions/setup-java@v2
+        with:
+          java-version: '14'
+          distribution: 'adopt'
 
-          for item in $(echo "$json" | jq -c '.[]'); do
-            echo "Processing item:"
-            echo "$item"
-            echo "--------"
-          done
+      - name: Run IfsCodeReview.jar
+        run: |
+          COMMIT_ID=$(git rev-parse HEAD)
+          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql
+        working-directory: ${{ github.workspace }}
+
+      - name: Print comments.json
+        run: cat comments.json
+        working-directory: ${{ github.workspace }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Read and Add Comments to PR
+        run: |
+          const fs = require('fs');
+
+          // Read the comments JSON file
+          const comments = JSON.parse(fs.readFileSync('comments.json', 'utf8'));
+
+          // GitHub REST API loop for adding comments to the PR
+          for (const comment of comments) {
+            const body = JSON.stringify({ body: comment.body });
+            const url = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/issues/${process.env.GITHUB_EVENT_NUMBER}/comments`;
+
+            // Use GitHub API to post comments to the PR
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Content-Type': 'application/json',
+              },
+              body,
+            });
+
+            // Log the response
+            console.log(response.statusText);
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
