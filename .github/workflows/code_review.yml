@@ -31,16 +31,16 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: Read comments from JSON file
+        id: read-comments
         run: |
           COMMENTS=$(cat comments.json)
-          echo "$COMMENTS" | jq -c '.[]' > comments_temp.json
-        shell: bash
+          echo "$COMMENTS" > /tmp/comments.json
+          echo "::set-output name=comments::/tmp/comments.json"
 
       - name: Post comments to PR
         run: |
-          for COMMENT in $(jq -c '.[]' comments_temp.json); do
-            echo "Posting comment:"
-            echo "$COMMENT"
+          COMMENTS=$(cat ${{ steps.read-comments.outputs.comments }} | jq -c '.[]')
+          for COMMENT in $COMMENTS; do
             curl -X POST \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: application/json" \
