@@ -1,48 +1,27 @@
-name: Add Comments to PR
+name: Process JSON Items
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
 jobs:
-  code-review:
-    permissions: write-all
+  process-json:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up JDK 14
-        uses: actions/setup-java@v2
-        with:
-          java-version: '14'
-          distribution: 'adopt'
-
-      - name: Run IfsCodeReview.jar
+      - name: Process JSON Items
         run: |
-          COMMIT_ID=$(git rev-parse HEAD)
-          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql
-        working-directory: ${{ github.workspace }}
+          json='[
+            {"body": "SELECT * is not allowed, specify the required columns.","path": "workspace/Test.plsql","line": 11,"commit_id": "90de3a02bdf57cb64bdb7f934f8949e42ba59851"},
+            {"body": "SELECT * is not allowed, specify the required columns.","path": "workspace/Test.plsql","line": 14,"commit_id": "90de3a02bdf57cb64bdb7f934f8949e42ba59851"}
+          ]'
 
-      - name: Print comments.json
-        run: cat comments.json
-        working-directory: ${{ github.workspace }}
-
-      - name: Read comments from JSON file
-        run: |
-          COMMENTS=$(cat comments.json)
-          echo "Processing comments:"
-          echo "$COMMENTS"
-          echo "$COMMENTS" | jq -c '.[]' > comments_temp.json
-        shell: bash
-
-      - name: Post comments to PR
-        run: |
-          for COMMENT in $(jq -c '.[]' comments_temp.json); do
-            echo "Posting comment:"
-            echo "$COMMENT"
+          for item in $(echo "$json" | jq -c '.[]'); do
+            echo "Processing item:"
+            echo "$item"
+            echo "--------"
           done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
