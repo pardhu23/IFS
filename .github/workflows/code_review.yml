@@ -9,6 +9,8 @@ jobs:
   code-review:
     permissions: write-all
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -28,6 +30,8 @@ jobs:
           PR_NO=${{github.event.number}}
           java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
         working-directory: ${{ github.workspace }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Print comments.json
         run: cat comments.json
