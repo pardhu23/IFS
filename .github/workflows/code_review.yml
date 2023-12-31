@@ -1,34 +1,49 @@
-name: PLSQL Code Review
+name: Add Comments to PR
 
 on:
   pull_request:
     branches:
-      - main # Update with your branch name
+      - main
 
 jobs:
   code-review:
+    permissions: write-all
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get .plsql files
-        run: |
-          find . -name "*.plsql" > plsql_files.txt
+      - name: Set up JDK 14
+        uses: actions/setup-java@v2
+        with:
+          java-version: '14'
+          distribution: 'adopt'
 
       - name: Run IfsCodeReview.jar
         run: |
           COMMIT_ID=$(git rev-parse HEAD)
-          java -jar IFS/.github/IfsCodeReview.jar $COMMIT_ID plsql_files.txt
-          
+          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql
+        working-directory: ${{ github.workspace }}
+
       - name: Print comments.json
         run: cat comments.json
         working-directory: ${{ github.workspace }}
-        
-      - name: Upload comments.json as PR artifact
-        if: always() # Ensure this step runs even if previous steps fail
-        uses: actions/upload-artifact@v2
-        with:
-          name: code-review-comments
-          path: comments.json
+
+      - name: Read comments from JSON file
+        run: |
+          COMMENTS=$(cat comments.json)
+          echo "$COMMENTS" | jq -c '.[]' > comments_temp.json
+        shell: bash
+
+      - name: Post comments to PR
+        run: |
+          for COMMENT in $(jq -c '.[]' comments_temp.json); do
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "$COMMENT" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
