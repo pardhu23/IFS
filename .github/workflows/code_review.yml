@@ -23,22 +23,12 @@ jobs:
       - name: Run IfsCodeReview.jar
         run: |
           COMMIT_ID=$(git rev-parse HEAD)
-          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql
+          OWNER_ID=${{github.repository_owner}}
+          REPO_ID=${{github.repository}}
+          PR_NO=${{github.event.number}}
+          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
         working-directory: ${{ github.workspace }}
 
       - name: Print comments.json
         run: cat comments.json
         working-directory: ${{ github.workspace }}
-
-      - name: Add Comments to PR using curl
-        run: |
-          COMMENTS=$(cat comments.json)
-          for COMMENT in $COMMENTS; do
-            # Use curl to add comments to the PR using GitHub API
-            # Replace placeholders with actual values from comments.json
-            curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              -d "$COMMENT" \
-              https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments
-          done
