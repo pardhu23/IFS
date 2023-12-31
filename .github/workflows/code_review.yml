@@ -30,35 +30,21 @@ jobs:
         run: cat comments.json
         working-directory: ${{ github.workspace }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Add Comments to PR
+        uses: actions/github-script@v4
         with:
-          node-version: '14'
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs');
+            const comments = JSON.parse(fs.readFileSync('comments.json', 'utf8'));
 
-      - name: Read and Add Comments to PR
-        run: |
-          const fs = require('fs');
-
-          // Read the comments JSON file
-          const comments = JSON.parse(fs.readFileSync('comments.json', 'utf8'));
-
-          // GitHub REST API loop for adding comments to the PR
-          for (const comment of comments) {
-            const body = JSON.stringify({ body: comment.body });
-            const url = `https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/issues/${process.env.GITHUB_EVENT_NUMBER}/comments`;
-
-            // Use GitHub API to post comments to the PR
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-                'Content-Type': 'application/json',
-              },
-              body,
-            });
-
-            // Log the response
-            console.log(response.statusText);
-          }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            for (const comment of comments) {            
+              github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment.body,
+                path: comment.path,
+                position: comment.line
+              });
+            }
