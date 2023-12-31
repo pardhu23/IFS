@@ -39,6 +39,8 @@ jobs:
       - name: Post comments to PR
         run: |
           for COMMENT in $(jq -c '.[]' comments_temp.json); do
+            echo "Posting comment:"
+            echo "$COMMENT"
             curl -X POST \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: application/json" \
