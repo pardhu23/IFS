@@ -30,18 +30,20 @@ jobs:
         run: cat comments.json
         working-directory: ${{ github.workspace }}
 
-      - name: Read comments from JSON
-        id: comments
+      - name: Read comments from JSON file
         run: |
-          echo "::set-output name=comments::$(cat comments.json)"
+          COMMENTS=$(cat comments.json)
+          echo "$COMMENTS" | jq -c '.[]' > comments_temp.json
+        shell: bash
 
       - name: Post comments to PR
         run: |
-          COMMENTS=$(< comments.json)
-          for comment in $(echo "${COMMENTS}" | jq -c '.[]'); do
+          for COMMENT in $(jq -c '.[]' comments_temp.json); do
             curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: application/json" \
-              -d "${comment}" \
+              -d "$COMMENT" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments"
           done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
