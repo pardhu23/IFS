@@ -33,14 +33,19 @@ jobs:
         run: cat comments.json
         working-directory: ${{ github.workspace }}
         
+      - name: Get PR number
+        id: pr_number
+        run: echo "PR_NUMBER=$(echo ${{ github.event.number }})" >> $GITHUB_ENV
+
       - name: Add Comments to PR
         run: |
-          # Read the JSON file containing comments
           COMMENTS=$(cat comments.json)
+          OWNER=${{ github.repository_owner }}
+          REPO=${{ github.event.repository.name }}
+          ISSUE_NUMBER=${{ env.PR_NUMBER }}
           
-          # Post comments to the Pull Request using GitHub API
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "$COMMENTS" \
-            https://api.github.com/repos/:owner/:repo/issues/:issue_number/comments
+            https://api.github.com/repos/$OWNER/$REPO/issues/$ISSUE_NUMBER/comments
