@@ -1,6 +1,6 @@
 PROCEDURE Fetch_External_Tax (
    order_no_          IN VARCHAR2,
-   address_changed_   IN VARCHAR2 DEFAULT 'FALSE',
+   address_changed    IN VARCHAR2 DEFAULT 'FALSE',
    include_charges_   IN VARCHAR2 DEFAULT 'TRUE' )
 IS
    i_                      NUMBER := 1;
