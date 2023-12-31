@@ -25,14 +25,13 @@ jobs:
       - name: Run IfsCodeReview.jar
         run: |
           COMMIT_ID=$(git rev-parse HEAD)
-          OWNER_ID=${{github.repository_owner}}
-          REPO_ID=${{github.repository}}
-          PR_NO=${{github.event.number}}
-          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
+          OWNER_ID=${{ github.repository_owner }}
+          REPO_ID=${{ github.repository }}
+          PR_NO=${{ github.event.number }}
+          env GH_TOKEN=${{ secrets.GH_TOKEN }} OWNER_ID=$OWNER_ID REPO_ID=$REPO_ID PR_NO=$PR_NO java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
         working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Print comments.json
-        run: cat comments.json
-        working-directory: ${{ github.workspace }}
+          OWNER_ID: ${{ github.repository_owner }}
+          REPO_ID: ${{ github.repository }}
+          PR_NO: ${{ github.event.number }}
