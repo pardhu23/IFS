@@ -39,12 +39,12 @@ jobs:
             const comments = JSON.parse(fs.readFileSync('comments.json', 'utf8'));
 
             for (const comment of comments) {
-              github.issues.createComment({
-                issue_number: context.issue.number,
+              await github.repos.createCommitComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                commit_sha: context.payload.pull_request.head.sha,
                 body: comment.body,
-                path: 'Test.plsql',
+                path: comment.path,
                 position: comment.position
               });
             }
