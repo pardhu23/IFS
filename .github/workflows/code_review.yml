@@ -26,12 +26,12 @@ jobs:
         run: |
           COMMIT_SHA=${{ github.sha }}
           OWNER_ID=${{ github.repository_owner }}
-          REPO_ID=${{ github.repository | basename }}
+          REPO_ID=$(echo ${{ github.repository }} | awk -F/ '{print $NF}')
           PR_NO=${{ github.event.number }}
           env GH_TOKEN=${{ secrets.GH_TOKEN }} OWNER_ID=$OWNER_ID REPO_ID=$REPO_ID PR_NO=$PR_NO java -jar .github/IfsCodeReview.jar $COMMIT_SHA workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
         working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           OWNER_ID: ${{ github.repository_owner }}
-          REPO_ID: ${{ github.repository | basename }}
+          REPO_ID: ${{ github.repository }}
           PR_NO: ${{ github.event.number }}
