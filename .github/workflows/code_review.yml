@@ -39,7 +39,7 @@ jobs:
         run: echo "PR_NUMBER=$(echo ${{ github.event.number }})" >> $GITHUB_ENV
       
       - name: PR Comments
-         gh issue comment ${{ github.event.number }} --body "$(<comments.json)"
+          gh issue comment ${{ github.event.number }} --body "$(<comments.json)"
         
       - name: PR Comment
         uses: actions/github-script@v2
