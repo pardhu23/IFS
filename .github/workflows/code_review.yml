@@ -27,7 +27,7 @@ jobs:
       - name: Run IfsCodeReview.jar
         run: |
           COMMIT_ID=$(git rev-parse HEAD)
-          java -jar .github/IfsCodeReview.jar $COMMIT_ID workspace/Test.plsql
+          java -jar .github/IfsCodeReview.jar $COMMIT_ID Test.plsql
         working-directory: ${{ github.workspace }}
 
       - name: Print comments.json
