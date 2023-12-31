@@ -1,9 +1,9 @@
-name: PLSQL Code Review
+name: Add Comments to PR
 
 on:
   pull_request:
     branches:
-      - main # Update with your branch name
+      - main
 
 jobs:
   code-review:
@@ -33,22 +33,20 @@ jobs:
       - name: Print comments.json
         run: cat comments.json
         working-directory: ${{ github.workspace }}
-        
-      - name: Get PR number
-        id: pr_number
-        run: echo "PR_NUMBER=$(echo ${{ github.event.number }})" >> $GITHUB_ENV
-      
-      - name: PR Comments
-          gh issue comment ${{ github.event.number }} --body "$(<comments.json)"
-        
-      - name: PR Comment
-        uses: actions/github-script@v2
+
+      - name: Add Comments to PR
+        uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.createComment({
-            issue_number: ${{ github.event.number }},
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: ':warning: PRs adding apps should generally be made against the [source repo `OWASP/OWASP-VWAD`](https://github.com/OWASP/OWASP-VWAD).'
-            })
+            const fs = require('fs');
+            const comments = JSON.parse(fs.readFileSync('comments.json', 'utf8'));
+
+            for (const comment of comments) {
+              github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment.body
+              });
+            }
