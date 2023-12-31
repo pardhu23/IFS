@@ -12,29 +12,6 @@ IS
    
    CURSOR get_test1 IS
    SELECT * FROM Student S, Course C WHERE S.CourseId(+) = C.CourseId;
-   
-   CURSOR get_order_lines IS
-      SELECT line_no, rel_no, line_item_no, DECODE(pol.rowstate, 'Released', 0, 1)
-      FROM   CUSTOMER_ORDER_LINE_TAB
-      WHERE  rowstate NOT IN ('Cancelled', 'Invoiced')
-      AND    line_item_no <= 0
-      AND    order_no = order_no_
-      AND    (address_changed_ = 'FALSE'  OR default_addr_flag = 'Y');
-      
-   CURSOR get_charge_lines IS
-      SELECT charge.sequence_no, count(distinct(line_no))
-      FROM CUSTOMER_ORDER_CHARGE_TAB charge, CUSTOMER_ORDER_TAB ord
-      WHERE ord.order_no = order_no_
-      AND ord.rowstate != 'Cancelled' 
-      AND ord.order_no = charge.order_no
-      AND charge.charged_qty > charge.invoiced_qty
-      AND ( charge.line_no IS NULL  
-          OR (address_changed_ = 'FALSE' 
-          OR (charge.order_no, charge.line_no, charge.rel_no, charge.line_item_no ) IN (SELECT order_no, line_no, rel_no, line_item_no
-                                                                                          FROM   CUSTOMER_ORDER_LINE_TAB line
-                                                                                          WHERE  line.order_no = order_no_
-                                                                                          AND   default_addr_flag = 'Y' )));
-   
 BEGIN
    company_                  := Site_API.Get_Company(Get_Contract(order_no_)); 
    line_source_key_arr_.DELETE;
