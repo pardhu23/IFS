@@ -47,6 +47,8 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: comment.body
+                body: comment.body,
+                path: comment.path,
+                position: comment.position
               });
             }
