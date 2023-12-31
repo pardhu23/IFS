@@ -22,7 +22,7 @@ jobs:
 
       - name: Get .plsql files
         run: |
-          find . -name "*.plsql" > plsql_files.txt
+          run: find . -name "*.plsql" --full-name > plsql_files.txt
 
       - name: Run IfsCodeReview.jar
         run: |
