@@ -24,7 +24,7 @@ jobs:
 
       - name: Run IfsCodeReview.jar
         run: |
-          COMMIT_ID=$(git rev-parse HEAD)
+          COMMIT_SHA=${{ github.sha }}
           OWNER_ID=${{ github.repository_owner }}
           REPO_ID=${{ github.repository }}
           PR_NO=${{ github.event.number }}
