@@ -45,6 +45,6 @@ jobs:
                 commit_sha: context.payload.pull_request.head.sha,
                 body: comment.body,
                 path: 'workspace/Test.plsql',
-                line: 1
+                position: 1
               });
             }
