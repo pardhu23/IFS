@@ -30,21 +30,18 @@ jobs:
         run: cat comments.json
         working-directory: ${{ github.workspace }}
 
-      - name: Add Comments to PR
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const fs = require('fs');
-            const comments = JSON.parse(fs.readFileSync('comments.json', 'utf8'));
+      - name: Read comments from JSON
+        id: comments
+        run: |
+          echo "::set-output name=comments::$(cat comments.json)"
 
-            for (const comment of comments) {
-              await github.repos.createCommitComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: context.payload.pull_request.head.sha,
-                body: comment.body,
-                path: comment.path,
-                line: comment.position
-              });
-            }
+      - name: Post comments to PR
+        run: |
+          COMMENTS=$(< comments.json)
+          for comment in $(echo "${COMMENTS}" | jq -c '.[]'); do
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "${comment}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments"
+          done
