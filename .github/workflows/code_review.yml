@@ -45,6 +45,6 @@ jobs:
                 commit_sha: context.payload.pull_request.head.sha,
                 body: comment.body,
                 path: comment.path,
-                position: comment.position
+                line: comment.position
               });
             }
