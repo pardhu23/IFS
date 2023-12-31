@@ -37,21 +37,14 @@ jobs:
         id: pr_number
         run: echo "PR_NUMBER=$(echo ${{ github.event.number }})" >> $GITHUB_ENV
 
-      - name: Read comments from file
-        id: read-comments
-        run: |
-          echo "::set-output name=comments::$(cat comments.json)"
-
-      - name: Add comments to PR
-        if: success() # Condition to check if previous steps were successful
-        run: |
-          COMMENTS="${{ steps.read-comments.outputs.comments }}"
-          OWNER="${{ github.repository_owner }}"
-          REPO="${{ github.event.repository.name }}"
-          ISSUE_NUMBER="${{ github.event.number }}"
-          
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "$COMMENTS" \
-            "https://api.github.com/repos/$OWNER/$REPO/issues/$ISSUE_NUMBER/comments"
+      - name: PR Comment
+        uses: actions/github-script@v2
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+            issue_number: ${{ github.event.number }},
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: ':warning: PRs adding apps should generally be made against the [source repo `OWASP/OWASP-VWAD`](https://github.com/OWASP/OWASP-VWAD).'
+            })
