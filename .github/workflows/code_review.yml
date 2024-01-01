@@ -15,7 +15,7 @@ jobs:
         id: check_label
         run: |
           labels=$(jq -r '.pull_request.labels[].name' $GITHUB_EVENT_PATH)
-          echo "$labels" | grep -q 'my_label' && label_added=true || label_added=false
+          echo "$labels" | grep -q 'Auto Code Review' && label_added=true || label_added=false
           echo "::set-output name=label_added::$label_added"
       - name: Debug label_added
         run: |
