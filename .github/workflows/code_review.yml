@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Label
-        id: check_label_step
+        id: check_label
         run: |
           label_added=$(jq -r '.pull_request.labels | map(.name == "Auto Code Review") | any' $GITHUB_EVENT_PATH)
           echo "::set-output name=label_added::$label_added"
