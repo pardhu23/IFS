@@ -12,6 +12,9 @@ jobs:
       assignee_matched: '${{ steps.check_assignee.outputs.assignee_matched }}'
       has_commits: '${{ steps.check_assignee.outputs.has_commits }}'
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
       - name: Check Assignee
         id: check_assignee
         run: >
