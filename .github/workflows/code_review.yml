@@ -13,7 +13,7 @@ jobs:
       - name: Check Assignee
         id: check_assignee
         run: >
-          desired_assignee="desired_username"
+          desired_assignee="pardhu23"
 
 
           if [ "${{ github.event.pull_request.assignee.login }}" ==
