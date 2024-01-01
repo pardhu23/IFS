@@ -1,5 +1,3 @@
-name: Custom Code Review
-
 on:
   pull_request:
     types:
@@ -10,12 +8,19 @@ on:
 jobs:
   check_label:
     runs-on: ubuntu-latest
+    outputs:
+      label_added: ${{ steps.check_label.outputs.label_added }}
     steps:
       - name: Check Label
         id: check_label
         run: |
-          label_added=$(jq -r '.pull_request.labels | map(.name == "Auto Code Review") | any' $GITHUB_EVENT_PATH)
+          labels=$(jq -r '.pull_request.labels[].name' $GITHUB_EVENT_PATH)
+          echo "$labels" | grep -q 'my_label' && label_added=true || label_added=false
           echo "::set-output name=label_added::$label_added"
+      - name: Debug label_added
+        run: |
+          echo "Label Added: ${{ steps.check_label.outputs.label_added }}"
+
 
   code_review:
     needs: check_label
