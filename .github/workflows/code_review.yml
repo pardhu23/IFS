@@ -1,48 +1,49 @@
 name: Custom Code Review
-'on':
+
+on:
   pull_request:
     types:
       - labeled
       - opened
       - synchronize
+
 jobs:
   check_label:
     runs-on: ubuntu-latest
     steps:
       - name: Check Label
         id: check_label_step
-        run: >
-          label_added=$(echo "${{ github.event.pull_request.labels }}" | jq
-          'any(contains([.[] | .name], "my_label"))')
-
+        run: |
+          label_added=$(jq -r '.pull_request.labels | map(.name == "my_label") | any' $GITHUB_EVENT_PATH)
           echo "::set-output name=label_added::$label_added"
+
   code_review:
     needs: check_label
     runs-on: ubuntu-latest
-    if: '${{ needs.check_label.outputs.label_added == ''true'' }}'
+    if: ${{ needs.check_label.outputs.label_added == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Set up JDK 14
         uses: actions/setup-java@v2
         with:
           java-version: '14'
-          distribution: adopt
+          distribution: 'adopt'
+
       - name: Get Latest Commit SHA
         id: get_commit_sha
-        run: >
-          commit_sha=$(curl -s -H "Authorization: Bearer ${{
-          secrets.GITHUB_TOKEN }}" \
+        run: |
+          commit_sha=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/commits" | jq -r '.[0].sha')
 
           echo "COMMIT_SHA=${commit_sha}" >> $GITHUB_ENV
-      - name: Run IfsCodeReview.jar
-        run: >
-          added_files=$(git --no-pager diff --name-only ${{ github.event.after
-          }}^ ${{ github.event.after }})
 
+      - name: Run IfsCodeReview.jar
+        run: |
+          added_files=$(git --no-pager diff --name-only ${{ github.event.after }}^ ${{ github.event.after }})
           for file in $added_files; do
             extension="${file##*.}"
             if [ "$extension" == "plsql" ]; then
@@ -54,10 +55,10 @@ jobs:
               env GH_TOKEN="${{ secrets.GH_TOKEN }}" OWNER_ID="$OWNER_ID" REPO_ID="$REPO_ID" PR_NO="$PR_NO" java -jar .github/IfsCodeReview.jar "$COMMIT_SHA" "$file" "$OWNER_ID" "$REPO_ID" "$PR_NO"
             fi
           done
-        working-directory: '${{ github.workspace }}'
+        working-directory: ${{ github.workspace }}
         env:
-          GH_TOKEN: '${{ secrets.GH_TOKEN }}'
-          OWNER_ID: '${{ github.repository_owner }}'
-          REPO_ID: '${{ github.repository }}'
-          PR_NO: '${{ github.event.number }}'
-          COMMIT_SHA: '${{ needs.check_label.outputs.commit_sha }}'
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          OWNER_ID: ${{ github.repository_owner }}
+          REPO_ID: ${{ github.repository }}
+          PR_NO: ${{ github.event.number }}
+          COMMIT_SHA: ${{ needs.check_label.outputs.commit_sha }}
