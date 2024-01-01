@@ -4,7 +4,7 @@ name: Custom Code Review
     types:
       - opened
       - synchronize
-	    - assigned
+      - assigned
 jobs:
   check_assignee:
     runs-on: ubuntu-latest
