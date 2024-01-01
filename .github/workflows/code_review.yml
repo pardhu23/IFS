@@ -1,11 +1,11 @@
 name: Custom Code Review
-'on':
+on:
   pull_request:
-    types:
-      - opened
-      - synchronize
+    types: [labeled]
+	
 jobs:
   code_review:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'Auto Code Review') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
