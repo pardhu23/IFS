@@ -3,7 +3,7 @@
 --  Logical unit: CSupplierOnboarding
 --  Component:    CMOD
 --
---  IFS Developer Studio Template Version 3.0
+--  IFS Developer Studio Template Version 3.0.1
 --
 --  Date    Sign       History
 --  ------  ------     ---------------------------------------------------------
