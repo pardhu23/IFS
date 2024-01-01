@@ -1,38 +1,42 @@
-name: Add Comments to PR
-
-on:
+name: Custom Code Review
+'on':
   pull_request:
-    branches:
-      - main
-
+    types:
+      - opened
+      - synchronize
 jobs:
-  code-review:
-    permissions: write-all
+  code_review:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up JDK 14
         uses: actions/setup-java@v2
         with:
           java-version: '14'
           distribution: 'adopt'
 
+      # Set the COMMIT_SHA variable separately before using it
+      - name: Set Commit SHA
+        run: echo "COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
       - name: Run IfsCodeReview.jar
         run: |
-          COMMIT_SHA="${{ github.event.before }}"
-          OWNER_ID=${{ github.repository_owner }}
-          REPO_ID=$(echo ${{ github.repository }} | awk -F/ '{print $NF}')
-          PR_NO=${{ github.event.number }}
-          env GH_TOKEN=${{ secrets.GH_TOKEN }} OWNER_ID=$OWNER_ID REPO_ID=$REPO_ID PR_NO=$PR_NO java -jar .github/IfsCodeReview.jar $COMMIT_SHA workspace/Test.plsql $OWNER_ID $REPO_ID $PR_NO
+          for file in $(git --no-pager diff --name-only --diff-filter=AM --no-renames origin/${{github.base_ref}} origin/${{github.head_ref}}); do
+            extension="${file##*.}"
+            if [ "$extension" == "plsql" ]; then
+              echo "Processing $file"
+              COMMIT_SHA="${{ github.sha }}"
+              OWNER_ID="${{ github.repository_owner }}"
+              REPO_ID=$(echo ${{ github.repository }} | awk -F/ '{print $NF}')
+              PR_NO="${{ github.event.number }}"
+              env GH_TOKEN="${{ secrets.GH_TOKEN }}" OWNER_ID="$OWNER_ID" REPO_ID="$REPO_ID" PR_NO="$PR_NO" java -jar .github/IfsCodeReview.jar "$COMMIT_SHA" "workspace/Test.plsql" "$OWNER_ID" "$REPO_ID" "$PR_NO"
+            fi
+          done
         working-directory: ${{ github.workspace }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           OWNER_ID: ${{ github.repository_owner }}
           REPO_ID: ${{ github.repository }}
           PR_NO: ${{ github.event.number }}
-          COMMIT_SHA: ${{ github.event.before }}
