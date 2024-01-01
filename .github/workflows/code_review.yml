@@ -4,17 +4,13 @@ name: Custom Code Review
     types:
       - opened
       - synchronize
-      - assigned
+	    - assigned
 jobs:
   check_assignee:
     runs-on: ubuntu-latest
     outputs:
       assignee_matched: '${{ steps.check_assignee.outputs.assignee_matched }}'
-      has_commits: '${{ steps.check_assignee.outputs.has_commits }}'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        
       - name: Check Assignee
         id: check_assignee
         run: >
@@ -28,24 +24,11 @@ jobs:
             assignee_matched=false
           fi
 
-
-          if [ "$(git rev-list --count ${{ github.event.before }}..${{
-          github.event.after }})" -gt 0 ]; then
-            has_commits=true
-          else
-            has_commits=false
-          fi
-
-
           echo "::set-output name=assignee_matched::$assignee_matched"
-
-          echo "::set-output name=has_commits::$has_commits"
   code_review:
     needs: check_assignee
     runs-on: ubuntu-latest
-    if: >-
-      ${{ needs.check_assignee.outputs.assignee_matched == 'true' &&
-      needs.check_assignee.outputs.has_commits == 'true' }}
+    if: '${{ needs.check_assignee.outputs.assignee_matched == ''true'' && github.event.after != null }}'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
