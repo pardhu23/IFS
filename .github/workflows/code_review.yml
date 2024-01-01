@@ -1,11 +1,13 @@
 name: Custom Code Review
-on:
+'on':
   pull_request:
-    types: [labeled]
-	
+    types:
+      - labeled
 jobs:
   code_review:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'Auto Code Review') }}
+    if: >-
+      ${{ contains(github.event.pull_request.labels.*.name, 'Auto Code Review')
+      }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -16,14 +18,14 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '14'
-          distribution: 'adopt'
-
-      # Set the COMMIT_SHA variable separately before using it
+          distribution: adopt
       - name: Set Commit SHA
-        run: echo "COMMIT_SHA=${{ github.event.after }}" >> $GITHUB_ENV
+        run: 'echo "COMMIT_SHA=${{ github.event.after }}" >> $GITHUB_ENV'
       - name: Run IfsCodeReview.jar
-        run: |
-          added_files=$(git diff --name-only ${{ github.event.after }}^ ${{ github.event.after }})
+        run: >
+          added_files=$(git diff --name-only ${{ github.event.after }}^ ${{
+          github.event.after }})
+
           for file in $added_files; do
             extension="${file##*.}"
             if [ "$extension" == "plsql" ]; then
@@ -35,10 +37,10 @@ jobs:
               env GH_TOKEN="${{ secrets.GH_TOKEN }}" OWNER_ID="$OWNER_ID" REPO_ID="$REPO_ID" PR_NO="$PR_NO" java -jar .github/IfsCodeReview.jar "$COMMIT_SHA" "$file" "$OWNER_ID" "$REPO_ID" "$PR_NO"
             fi
           done
-        working-directory: ${{ github.workspace }}
+        working-directory: '${{ github.workspace }}'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          OWNER_ID: ${{ github.repository_owner }}
-          REPO_ID: ${{ github.repository }}
-          PR_NO: ${{ github.event.number }}
-          COMMIT_SHA: ${{ github.event.after }}
+          GH_TOKEN: '${{ secrets.GH_TOKEN }}'
+          OWNER_ID: '${{ github.repository_owner }}'
+          REPO_ID: '${{ github.repository }}'
+          PR_NO: '${{ github.event.number }}'
+          COMMIT_SHA: '${{ github.event.after }}'
