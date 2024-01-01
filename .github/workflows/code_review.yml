@@ -18,3 +18,4 @@ jobs:
         run: |
           echo "COMMIT_SHA=${{ github.sha }}"
           echo "COMMIT_SHA_BEFORE=${{ github.event.before }}"
+          echo "COMMIT_SHA_AFTER=${{ github.event.after }}"
