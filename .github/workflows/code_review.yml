@@ -14,7 +14,7 @@ jobs:
       - name: Check Label
         id: check_label_step
         run: |
-          label_added=$(jq -r '.pull_request.labels | map(.name == "my_label") | any' $GITHUB_EVENT_PATH)
+          label_added=$(jq -r '.pull_request.labels | map(.name == "Auto Code Review") | any' $GITHUB_EVENT_PATH)
           echo "::set-output name=label_added::$label_added"
 
   code_review:
