@@ -27,7 +27,7 @@ jobs:
             extension="${file##*.}"
             if [ "$extension" == "plsql" ]; then
               echo "Processing $file"
-              COMMIT_SHA="${{ github.sha }}"
+              COMMIT_SHA="${{ github.event.before }}"
               OWNER_ID="${{ github.repository_owner }}"
               REPO_ID=$(echo ${{ github.repository }} | awk -F/ '{print $NF}')
               PR_NO="${{ github.event.number }}"
@@ -40,3 +40,4 @@ jobs:
           OWNER_ID: ${{ github.repository_owner }}
           REPO_ID: ${{ github.repository }}
           PR_NO: ${{ github.event.number }}
+          COMMIT_SHA: ${{ github.event.before }}
