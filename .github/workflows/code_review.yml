@@ -4,9 +4,31 @@ name: Custom Code Review
     types:
       - opened
       - synchronize
+      - assigned
 jobs:
-  code_review:
+  check_assignee:
     runs-on: ubuntu-latest
+    outputs:
+      assignee_matched: '${{ steps.check_assignee.outputs.assignee_matched }}'
+    steps:
+      - name: Check Assignee
+        id: check_assignee
+        run: >
+          desired_assignee="pardhu23"
+
+
+          if [ "${{ github.event.pull_request.assignee.login }}" ==
+          "$desired_assignee" ]; then
+            assignee_matched=true
+          else
+            assignee_matched=false
+          fi
+
+          echo "::set-output name=assignee_matched::$assignee_matched"
+  code_review:
+    needs: check_assignee
+    runs-on: ubuntu-latest
+    if: '${{ needs.check_assignee.outputs.assignee_matched == ''true'' && github.event.after != null }}'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -16,28 +38,29 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '14'
-          distribution: 'adopt'
-
-      # Set the COMMIT_SHA variable separately before using it
+          distribution: adopt
       - name: Set Commit SHA
-        run: echo "COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+        run: 'echo "COMMIT_SHA=${{ github.event.after }}" >> $GITHUB_ENV'
       - name: Run IfsCodeReview.jar
-        run: |
-          for file in $(git --no-pager diff --name-only --diff-filter=AM --no-renames origin/${{github.base_ref}} origin/${{github.head_ref}}); do
+        run: >
+          added_files=$(git diff --name-only ${{ github.event.after }}^ ${{
+          github.event.after }})
+
+          for file in $added_files; do
             extension="${file##*.}"
             if [ "$extension" == "plsql" ]; then
               echo "Processing $file"
-              COMMIT_SHA="${{ github.event.before }}"
+              COMMIT_SHA="${{ github.event.after }}"
               OWNER_ID="${{ github.repository_owner }}"
               REPO_ID=$(echo ${{ github.repository }} | awk -F/ '{print $NF}')
               PR_NO="${{ github.event.number }}"
-              env GH_TOKEN="${{ secrets.GH_TOKEN }}" OWNER_ID="$OWNER_ID" REPO_ID="$REPO_ID" PR_NO="$PR_NO" java -jar .github/IfsCodeReview.jar "$COMMIT_SHA" "workspace/Test.plsql" "$OWNER_ID" "$REPO_ID" "$PR_NO"
+              env GH_TOKEN="${{ secrets.GH_TOKEN }}" OWNER_ID="$OWNER_ID" REPO_ID="$REPO_ID" PR_NO="$PR_NO" java -jar .github/IfsCodeReview.jar "$COMMIT_SHA" "$file" "$OWNER_ID" "$REPO_ID" "$PR_NO"
             fi
           done
-        working-directory: ${{ github.workspace }}
+        working-directory: '${{ github.workspace }}'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          OWNER_ID: ${{ github.repository_owner }}
-          REPO_ID: ${{ github.repository }}
-          PR_NO: ${{ github.event.number }}
-          COMMIT_SHA: ${{ github.event.before }}
+          GH_TOKEN: '${{ secrets.GH_TOKEN }}'
+          OWNER_ID: '${{ github.repository_owner }}'
+          REPO_ID: '${{ github.repository }}'
+          PR_NO: '${{ github.event.number }}'
+          COMMIT_SHA: '${{ github.event.after }}'
