@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       assignee_matched: '${{ steps.check_assignee.outputs.assignee_matched }}'
+      commit_sha: '${{ steps.check_assignee.outputs.commit_sha }}'
     steps:
       - name: Check Assignee
         id: check_assignee
@@ -24,11 +25,21 @@ jobs:
             assignee_matched=false
           fi
 
+
+          commit_sha="${{ github.event.after }}"
+
+          if [ "$commit_sha" == "null" ]; then
+            commit_sha="${{ github.event.before }}"
+          fi
+
+
           echo "::set-output name=assignee_matched::$assignee_matched"
+
+          echo "::set-output name=commit_sha::$commit_sha"
   code_review:
     needs: check_assignee
     runs-on: ubuntu-latest
-    if: '${{ needs.check_assignee.outputs.assignee_matched == ''true'' && github.event.after != null }}'
+    if: '${{ needs.check_assignee.outputs.assignee_matched == ''true'' }}'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -40,7 +51,9 @@ jobs:
           java-version: '14'
           distribution: adopt
       - name: Set Commit SHA
-        run: 'echo "COMMIT_SHA=${{ github.event.after }}" >> $GITHUB_ENV'
+        run: >-
+          echo "COMMIT_SHA=${{ needs.check_assignee.outputs.commit_sha }}" >>
+          $GITHUB_ENV
       - name: Run IfsCodeReview.jar
         run: >
           added_files=$(git diff --name-only ${{ github.event.after }}^ ${{
