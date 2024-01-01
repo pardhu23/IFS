@@ -56,8 +56,7 @@ jobs:
           $GITHUB_ENV
       - name: Run IfsCodeReview.jar
         run: >
-          added_files=$(git diff --name-only ${{ github.event.after }}^ ${{
-          github.event.after }})
+          added_files=$(git diff --name-only ${{ needs.check_assignee.outputs.commit_sha }}^ ${{ needs.check_assignee.outputs.commit_sha }}
 
           for file in $added_files; do
             extension="${file##*.}"
