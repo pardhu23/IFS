@@ -5,33 +5,29 @@ name: Custom Code Review
       - opened
       - synchronize
 jobs:
-  check_reviewer:
+  check_assignee:
     runs-on: ubuntu-latest
     outputs:
-      reviewer_matched: '${{ steps.check_reviewer.outputs.reviewer_matched }}'
+      assignee_matched: '${{ steps.check_assignee.outputs.assignee_matched }}'
     steps:
-      - name: Check Reviewer
-        id: check_reviewer
+      - name: Check Assignee
+        id: check_assignee
         run: >
-          desired_reviewer="desired_username"
-
-          requested_reviewers=$(jq -r
-          '.pull_request.requested_reviewers[].login' $GITHUB_EVENT_PATH)
+          desired_assignee="desired_username"
 
 
-          echo "Requested Reviewers: $requested_reviewers"
+          if [ "${{ github.event.pull_request.assignee.login }}" ==
+          "$desired_assignee" ]; then
+            assignee_matched=true
+          else
+            assignee_matched=false
+          fi
 
-
-          # Check if desired_reviewer is in the list of requested reviewers
-
-          echo "$requested_reviewers" | grep -q "$desired_reviewer" &&
-          reviewer_matched=true || reviewer_matched=false
-
-          echo "::set-output name=reviewer_matched::$reviewer_matched"
+          echo "::set-output name=assignee_matched::$assignee_matched"
   code_review:
-    needs: check_reviewer
+    needs: check_assignee
     runs-on: ubuntu-latest
-    if: '${{ needs.check_reviewer.outputs.reviewer_matched == ''true'' }}'
+    if: '${{ needs.check_assignee.outputs.assignee_matched == ''true'' }}'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
