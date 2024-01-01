@@ -20,7 +20,7 @@ jobs:
 
       # Set the COMMIT_SHA variable separately before using it
       - name: Set Commit SHA
-        run: echo "COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+        run: echo "COMMIT_SHA=${{ github.event.before }}" >> $GITHUB_ENV
       - name: Run IfsCodeReview.jar
         run: |
           for file in $(git --no-pager diff --name-only --diff-filter=AM --no-renames origin/${{github.base_ref}} origin/${{github.head_ref}}); do
