@@ -13,18 +13,18 @@ jobs:
       - name: Check Reviewer
         id: check_reviewer
         run: >
-          reviewers=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN
-          }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/reviews" | jq -r '.[].user.login')
           desired_reviewer="desired_username"
 
+          requested_reviewers=$(jq -r
+          '.pull_request.requested_reviewers[].login' $GITHUB_EVENT_PATH)
 
-          echo "Reviewers: $reviewers"
+
+          echo "Requested Reviewers: $requested_reviewers"
 
 
-          # Check if desired_reviewer is in the list of reviewers
+          # Check if desired_reviewer is in the list of requested reviewers
 
-          echo "$reviewers" | grep -q "$desired_reviewer" &&
+          echo "$requested_reviewers" | grep -q "$desired_reviewer" &&
           reviewer_matched=true || reviewer_matched=false
 
           echo "::set-output name=reviewer_matched::$reviewer_matched"
