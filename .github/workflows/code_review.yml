@@ -1,10 +1,15 @@
 name: Custom Code Review
-'on':
+
+on:
   pull_request:
     types:
       - opened
       - synchronize
       - assigned
+      - labeled
+    paths:
+      - '**/*'
+
 jobs:
   check_assignee:
     runs-on: ubuntu-latest
@@ -12,34 +17,39 @@ jobs:
       assignee_matched: '${{ steps.check_assignee.outputs.assignee_matched }}'
       commit_sha: '${{ steps.check_assignee.outputs.commit_sha }}'
     steps:
-      - name: Check Assignee
+      - name: Check Assignee and Label
         id: check_assignee
         run: >
           desired_assignee="pardhu23"
+          desired_label="Auto Code Review"
 
-
-          if [ "${{ github.event.pull_request.assignee.login }}" ==
-          "$desired_assignee" ]; then
+          # Check if the assignee matches
+          if [ "${{ github.event.pull_request.assignee.login }}" == "$desired_assignee" ]; then
             assignee_matched=true
           else
             assignee_matched=false
           fi
 
+          # Check if the 'Auto Code Review' label is added
+          if [ "$(echo "${{ github.event.pull_request.labels.*.name }}" | grep -c "$desired_label")" -gt 0 ]; then
+            label_added=true
+          else
+            label_added=false
+          fi
 
           commit_sha="${{ github.event.after }}"
-
           if [ "$commit_sha" == "null" ]; then
             commit_sha="${{ github.event.before }}"
           fi
 
-
           echo "::set-output name=assignee_matched::$assignee_matched"
-
+          echo "::set-output name=label_added::$label_added"
           echo "::set-output name=commit_sha::$commit_sha"
+
   code_review:
     needs: check_assignee
     runs-on: ubuntu-latest
-    if: '${{ needs.check_assignee.outputs.assignee_matched == ''true'' }}'
+    if: ${{ needs.check_assignee.outputs.assignee_matched == 'true' || (needs.check_assignee.outputs.label_added == 'true' && needs.check_assignee.outputs.commit_sha != 'null') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -51,12 +61,10 @@ jobs:
           java-version: '14'
           distribution: adopt
       - name: Set Commit SHA
-        run: >-
-          echo "COMMIT_SHA=${{ needs.check_assignee.outputs.commit_sha }}" >>
-          $GITHUB_ENV
+        run: echo "COMMIT_SHA=${{ needs.check_assignee.outputs.commit_sha }}" >> $GITHUB_ENV
       - name: Run IfsCodeReview.jar
-        run: >
-          added_files=$(git diff --name-only ${{ needs.check_assignee.outputs.commit_sha }}^ ${{ needs.check_assignee.outputs.commit_sha }}
+        run: |
+          added_files=$(git diff --name-only ${{ needs.check_assignee.outputs.commit_sha }}^ ${{ needs.check_assignee.outputs.commit_sha }})
 
           for file in $added_files; do
             extension="${file##*.}"
