@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Check Assignee and Label
         id: check_assignee
-        run: >
+        run: |
           desired_assignee="pardhu23"
           desired_label="Auto Code Review"
 
