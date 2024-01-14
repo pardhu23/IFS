@@ -42,9 +42,15 @@ jobs:
             commit_sha="${{ github.event.before }}"
           fi
 
+          # Set outputs
           echo "::set-output name=assignee_matched::$assignee_matched"
           echo "::set-output name=label_added::$label_added"
           echo "::set-output name=commit_sha::$commit_sha"
+
+          # Print values to the console
+          echo "Assignee Matched: $assignee_matched"
+          echo "Label Added: $label_added"
+          echo "Commit SHA: $commit_sha"
 
   code_review:
     needs: check_assignee
