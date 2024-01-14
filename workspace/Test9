@@ -1,0 +1,18 @@
+FUNCTION C_Check_So_Demand_line(
+   order_no_ IN VARCHAR2) RETURN NUMBER
+IS 
+
+   CURSOR get_line_count IS 
+   SELECT COUNT(*)
+   FROM   purchase_order_line_tab p
+   WHERE  p.order_no    = order_no_
+   AND    p.demand_code = 'SO';
+
+   count_ NUMBER;
+BEGIN 
+   OPEN  get_line_count;
+   FETCH get_line_count INTO count_;
+   CLOSE get_line_count;
+
+   RETURN count_;
+END C_Check_So_Demand_line;
